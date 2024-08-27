@@ -2,6 +2,7 @@ import streamlit as st
 from synthetic_data.synthetic_data_generator import datasets
 from utils.read_data import read_and_combine_csv_files
 from utils.aggrid_config import aggrid_configuration
+import time
 
 # ---------------------------------------------------------------------
 # HOME PAGE - CONFIGURATION
@@ -22,9 +23,18 @@ with st.sidebar:
 # ---------------------------------------------------------------------
 # HOME PAGE - MAIN CONTENT AREA
 # ---------------------------------------------------------------------
-aggrid_df, aggrid_polars_df = aggrid_configuration(df)
+with st.container(border=True):
+    st.subheader('Rendering AgGrid')
+    start_time = time.time()
+    aggrid_df, aggrid_polars_df = aggrid_configuration(df)
+    execution_time = time.time() - start_time
 
-st.dataframe(aggrid_polars_df)
+with st.container(border=True):
+    st.subheader('AgGrid execution time')
+    st.write('Rendering AgGrid: {}'.format(execution_time))
+
+with st.container(border=True):
+    st.dataframe(aggrid_polars_df)
 
 
 # what dataset to read, radio button. read pufunctool cached
