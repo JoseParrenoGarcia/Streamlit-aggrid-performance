@@ -1,5 +1,6 @@
 from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 import polars as pl
+import streamlit as st
 
 # Define JsCode for country formatting
 countryFormatter = JsCode("""
@@ -139,14 +140,17 @@ function(params) {
 }
 """)
 
-# Wrapping up function
 def aggrid_configuration(df):
     grid_builder = GridOptionsBuilder.from_dataframe(df)
 
+    # UI configuration
     grid_builder.configure_side_bar()
     grid_builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
+
+    # All columns
     grid_builder.configure_default_column(filter=True, groupable=True, value=True, enableRowGroup=True)
 
+    # Specific columns
     grid_builder.configure_column('Date', aggFunc=None,)
 
     numeric_types = ['numericColumn', 'numberColumnFilter', 'customNumericFormat']
@@ -196,7 +200,8 @@ def aggrid_configuration(df):
                                   valueGetter=currency_getter,
                                   valueFormatter=currency_formatter,
                                   cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',},
-                                  aggFunc="sum",)
+                                  aggFunc="sum",
+                                  )
 
     grid_builder.configure_column('clickshare', header_name='Click Share', type=numeric_types,
                                   valueGetter=percentage_getter,
@@ -211,12 +216,16 @@ def aggrid_configuration(df):
     # Build grid options
     gridOptions = grid_builder.build()
 
+    # Reorder columns by setting the 'columnDefs' after building the grid options
+    column_order = ["Date", "Device", "Market", "Impressions", "Clicks", "Cost", "Revenue", "ROI", "CPC", "CTR", "clickshare"]
+    gridOptions['columnDefs'] = sorted(gridOptions['columnDefs'], key=lambda col: column_order.index(col['field']) if col['field'] in column_order else len(column_order))
+
     grid_response = AgGrid(df,
                            gridOptions=gridOptions,
                            allow_unsafe_jscode=True,
                            height=min(500, (len(df)) * 60),  # 38px per row or 500px
-                           fit_columns_on_grid_load=False,
-                           theme='balham'
+                           fit_columns_on_grid_load=True,
+                           theme='balham',
                            )
 
     filtered_df = pl.DataFrame(grid_response['data'])

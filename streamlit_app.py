@@ -15,10 +15,18 @@ st.set_page_config(
 # HOME PAGE - SIDEBAR
 # ---------------------------------------------------------------------
 with st.sidebar:
-    num_rows = st.radio(label='How many rows to load?', options=datasets)
+    with st.container(border=True):
+        st.write('**How many rows to load?**')
+        formatted_datasets = {f"{x:,}": x for x in datasets}
+        selected_num_rows = st.radio(label='How many rows to load?', options=list(formatted_datasets.keys()), label_visibility="collapsed")
+        num_rows = formatted_datasets[selected_num_rows]
 
-    with st.spinner(text=f'Reading data with {num_rows} rows'):
-        df = read_and_combine_csv_files(f'synthetic_data/data_csv/dataset_{num_rows}')
+        with st.spinner(text=f'Reading data with {num_rows} rows'):
+            df = read_and_combine_csv_files(f'synthetic_data/data_csv/dataset_{num_rows}')
+
+    with st.container(border=True):
+        st.write("**Filtering options for basic streamlit dataframe**")
+
 
 # ---------------------------------------------------------------------
 # HOME PAGE - MAIN CONTENT AREA
@@ -34,14 +42,22 @@ with st.container(border=True):
     st.write('Rendering AgGrid: {}'.format(execution_time))
 
 with st.container(border=True):
-    st.dataframe(aggrid_polars_df)
+    st.subheader('Rendering basic dataframe')
+    start_time = time.time()
+    st.dataframe(df)
+    execution_time = time.time() - start_time
+
+with st.container(border=True):
+    st.subheader('Basic dataframe execution time')
+    st.write('Rendering basic dataframe: {}'.format(execution_time))
+
 
 
 # what dataset to read, radio button. read pufunctool cached
 # have a print saying: this is displayed if full-app is re-run
-# timeit for rendering table
+# timeit for rendering table - ready to capture
 # timeit for filtering
-# timeit for sorting
+# timeit for sorting - ready to capture
 # timeit for aggregating
 
 
