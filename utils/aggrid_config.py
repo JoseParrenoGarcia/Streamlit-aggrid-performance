@@ -145,58 +145,68 @@ def aggrid_configuration(df):
 
     grid_builder.configure_side_bar()
     grid_builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
-    # grid_builder.configure_default_column(filter=True, groupable=True, value=True, enableRowGroup=True)
+    grid_builder.configure_default_column(filter=True, groupable=True, value=True, enableRowGroup=True)
+
+    grid_builder.configure_column('Date', aggFunc=None,)
 
     numeric_types = ['numericColumn', 'numberColumnFilter', 'customNumericFormat']
     grid_builder.configure_column('Impressions',
                                   type=numeric_types,
                                   valueGetter=thousands_getter,
                                   valueFormatter=thousands_formatter,
-                                  cellRendererParams={'decimalPoints': 0})
+                                  cellRendererParams={'decimalPoints': 0},
+                                  aggFunc="sum",)
 
     grid_builder.configure_column('CTR',
                                   type=numeric_types,
                                   valueGetter=percentage_getter,
                                   valueFormatter=percentage_formatter,
-                                  cellRendererParams={'decimalPoints': 2})
+                                  cellRendererParams={'decimalPoints': 2},
+                                  aggFunc="avg",)
 
     grid_builder.configure_column('Clicks',
                                   type=numeric_types,
                                   valueGetter=thousands_getter,
                                   valueFormatter=thousands_formatter,
-                                  cellRendererParams={'decimalPoints': 0})
+                                  cellRendererParams={'decimalPoints': 0},
+                                  aggFunc="sum",)
 
     grid_builder.configure_column('CPC', type=numeric_types,
                                   valueGetter=currency_getter,
                                   valueFormatter=currency_formatter,
-                                  cellRendererParams={'decimalPoints': 3, 'currencySymbol': '€', })
+                                  cellRendererParams={'decimalPoints': 3, 'currencySymbol': '€', },
+                                  aggFunc="avg",)
 
     grid_builder.configure_column('Cost',
                                   type=numeric_types,
                                   valueGetter=currency_getter,
                                   valueFormatter=currency_formatter,
-                                  cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',})
+                                  cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',},
+                                  aggFunc="sum",)
 
     grid_builder.configure_column('ROI', type=numeric_types,
                                   valueGetter=percentage_getter,
                                   valueFormatter=percentage_formatter,
-                                  cellRendererParams={'decimalPoints': 1}
+                                  cellRendererParams={'decimalPoints': 1},
+                                  aggFunc="avg",
                                   )
 
     grid_builder.configure_column('Revenue',
                                   type=numeric_types,
                                   valueGetter=currency_getter,
                                   valueFormatter=currency_formatter,
-                                  cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',})
+                                  cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',},
+                                  aggFunc="sum",)
 
     grid_builder.configure_column('clickshare', header_name='Click Share', type=numeric_types,
                                   valueGetter=percentage_getter,
                                   valueFormatter=percentage_formatter,
-                                  cellRendererParams={'decimalPoints': 2})
+                                  cellRendererParams={'decimalPoints': 2},
+                                  aggFunc="avg",)
 
     text_types = ['textColumn', 'stringColumnFilter']
-    grid_builder.configure_column('Market', type=text_types, valueFormatter=countryFormatter,)
-    grid_builder.configure_column('Device', type=text_types, valueFormatter=deviceFormatter, )
+    grid_builder.configure_column('Market', type=text_types, valueFormatter=countryFormatter, aggFunc=None,)
+    grid_builder.configure_column('Device', type=text_types, valueFormatter=deviceFormatter, aggFunc=None,)
 
     # Build grid options
     gridOptions = grid_builder.build()
