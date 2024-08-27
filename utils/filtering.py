@@ -42,6 +42,7 @@ def filtering_pandas(folder_path,
     print('Pandas cached filter: {}'.format(execution_time))
 
     if list_of_grp_by_fields:
+        start_time = time.time()
         df = (df
               .groupby(list(list_of_grp_by_fields))
               .agg({**{field: 'sum' for field in sum_fields},
@@ -53,6 +54,8 @@ def filtering_pandas(folder_path,
         df.columns = [f'{col}_{"Sum" if col in sum_fields else "Avg"}' for col in df.columns]
 
         df = df.reset_index()
+        execution_time = time.time() - start_time
+        print('Pandas cached aggregations: {}'.format(execution_time))
 
     return df
 
