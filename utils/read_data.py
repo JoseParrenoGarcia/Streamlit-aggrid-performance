@@ -1,5 +1,5 @@
 import os
-import polars as pl
+import pandas as pd
 import functools
 
 # Fields to sum
@@ -14,10 +14,11 @@ mean_fields = ['CTR', 'CPC', 'ROI']
 @functools.lru_cache
 def read_and_combine_csv_files(folder_path):
     csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
-    df_list = [pl.read_csv(os.path.join(folder_path, file)) for file in csv_files]
+    df_list = [pd.read_csv(os.path.join(folder_path, file)) for file in csv_files]
 
-    df = pl.concat(df_list)
-    markets_polars_df = pl.read_csv('synthetic_data/data_csv/dataset_markets/markets.csv')
+    df = pd.concat(df_list, ignore_index=True)
+    markets_pandas_df = pd.read_csv('synthetic_data/data_csv/dataset_markets/markets.csv')
 
-    return df.join(markets_polars_df, on='Market', how='inner')
+    return pd.merge(df, markets_pandas_df, on='Market', how='inner')
+
 
