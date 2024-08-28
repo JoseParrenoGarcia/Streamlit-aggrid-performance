@@ -1,6 +1,5 @@
 from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
 import polars as pl
-import streamlit as st
 
 # Define JsCode for country formatting
 countryFormatter = JsCode("""
