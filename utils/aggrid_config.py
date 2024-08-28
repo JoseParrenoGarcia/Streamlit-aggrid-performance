@@ -4,70 +4,27 @@ import polars as pl
 # Define JsCode for country formatting
 countryFormatter = JsCode("""
 function(params) {
-    if (params.value == null || params.value === undefined) {
-        return '';
-    }
-    var countryEmojis = {
-        "UK": "🇬🇧",
-        "US": "🇺🇸",
-        "ES": "🇪🇸",
-        "JP": "🇯🇵",
-        "AU": "🇦🇺",
-        "BR": "🇧🇷",
-        "MX": "🇲🇽",
-        "DE": "🇩🇪",
-        "FR": "🇫🇷",
-        "IT": "🇮🇹",
-        "CA": "🇨🇦",
-        "CN": "🇨🇳",
-        "IN": "🇮🇳",
-        "RU": "🇷🇺",
-        "ZA": "🇿🇦",
-        "AR": "🇦🇷",
-        "NL": "🇳🇱",
-        "SE": "🇸🇪",
-        "NO": "🇳🇴",
-        "DK": "🇩🇰",
-        "FI": "🇫🇮",
-        "BE": "🇧🇪",
-        "CH": "🇨🇭",
-        "AT": "🇦🇹",
-        "PL": "🇵🇱",
-        "PT": "🇵🇹",
-        "GR": "🇬🇷",
-        "TR": "🇹🇷",
-        "EG": "🇪🇬",
-        "SA": "🇸🇦",
-        "AE": "🇦🇪",
-        "SG": "🇸🇬",
-        "MY": "🇲🇾",
-        "TH": "🇹🇭",
-        "ID": "🇮🇩",
-        "PH": "🇵🇭",
-        "VN": "🇻🇳",
-        "NZ": "🇳🇿",
-        "KR": "🇰🇷",
-        "IL": "🇮🇱"
+    const countryEmojis = {
+        "UK": "🇬🇧", "US": "🇺🇸", "ES": "🇪🇸", "JP": "🇯🇵", "AU": "🇦🇺",
+        "BR": "🇧🇷", "MX": "🇲🇽", "DE": "🇩🇪", "FR": "🇫🇷", "IT": "🇮🇹",
+        "CA": "🇨🇦", "CN": "🇨🇳", "IN": "🇮🇳", "RU": "🇷🇺", "ZA": "🇿🇦",
+        "AR": "🇦🇷", "NL": "🇳🇱", "SE": "🇸🇪", "NO": "🇳🇴", "DK": "🇩🇰",
+        "FI": "🇫🇮", "BE": "🇧🇪", "CH": "🇨🇭", "AT": "🇦🇹", "PL": "🇵🇱",
+        "PT": "🇵🇹", "GR": "🇬🇷", "TR": "🇹🇷", "EG": "🇪🇬", "SA": "🇸🇦",
+        "AE": "🇦🇪", "SG": "🇸🇬", "MY": "🇲🇾", "TH": "🇹🇭", "ID": "🇮🇩",
+        "PH": "🇵🇭", "VN": "🇻🇳", "NZ": "🇳🇿", "KR": "🇰🇷", "IL": "🇮🇱"
     };
-    var countryCode = params.value;
-    var emoji = countryEmojis[countryCode] || '';
-    return emoji + ' ' + countryCode;
+    return `${countryEmojis[params.value] || ''} ${params.value || ''}`;
 }
 """)
 
 # Define JsCode for device formatting
 deviceFormatter = JsCode("""
 function(params) {
-    if (params.value == null || params.value === undefined) {
-        return '';
-    }
-    var deviceEmojis = {
-        "Desktop": "🖥️",
-        "Mobile": "📱",
-        };
-    var deviceType = params.value;
-    var emoji = deviceEmojis[deviceType] || '';
-    return emoji + ' ' + deviceType;
+    const deviceEmojis = {
+        "Desktop": "🖥️", "Mobile": "📱"
+    };
+    return `${deviceEmojis[params.value] || ''} ${params.value || ''}`;
 }
 """)
 
@@ -144,7 +101,10 @@ def aggrid_configuration(df):
 
     # UI configuration
     grid_builder.configure_side_bar()
+
+    # Use pagination and row virtualisation for better performance
     grid_builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
+    grid_builder.configure_grid_options(enableRowVirtualization=True, enableRangeSelection=False)
 
     # All columns
     grid_builder.configure_default_column(filter=True, groupable=True, value=True, enableRowGroup=True)
@@ -155,57 +115,65 @@ def aggrid_configuration(df):
     numeric_types = ['numericColumn', 'numberColumnFilter', 'customNumericFormat']
     grid_builder.configure_column('Impressions',
                                   type=numeric_types,
-                                  valueGetter=thousands_getter,
-                                  valueFormatter=thousands_formatter,
-                                  cellRendererParams={'decimalPoints': 0},
+                                  valueFormatter="new Intl.NumberFormat('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value)",
+                                  # valueGetter=thousands_getter,
+                                  # valueFormatter=thousands_formatter,
+                                  # cellRendererParams={'decimalPoints': 0},
                                   aggFunc="sum",)
 
     grid_builder.configure_column('CTR',
                                   type=numeric_types,
-                                  valueGetter=percentage_getter,
-                                  valueFormatter=percentage_formatter,
-                                  cellRendererParams={'decimalPoints': 2},
+                                  valueFormatter="(value * 100).toFixed(2) + '%'",
+                                  # valueGetter=percentage_getter,
+                                  # valueFormatter=percentage_formatter,
+                                  # cellRendererParams={'decimalPoints': 2},
                                   aggFunc="avg",)
 
     grid_builder.configure_column('Clicks',
                                   type=numeric_types,
-                                  valueGetter=thousands_getter,
-                                  valueFormatter=thousands_formatter,
-                                  cellRendererParams={'decimalPoints': 0},
+                                  valueFormatter="new Intl.NumberFormat('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value)",
+                                  # valueGetter=thousands_getter,
+                                  # valueFormatter=thousands_formatter,
+                                  # cellRendererParams={'decimalPoints': 0},
                                   aggFunc="sum",)
 
     grid_builder.configure_column('CPC', type=numeric_types,
-                                  valueGetter=currency_getter,
-                                  valueFormatter=currency_formatter,
-                                  cellRendererParams={'decimalPoints': 3, 'currencySymbol': '€', },
+                                  valueFormatter="new Intl.NumberFormat('en-US', {style: 'currency', currency: 'EUR'}).format(value)",
+                                  # valueGetter=currency_getter,
+                                  # valueFormatter=currency_formatter,
+                                  # cellRendererParams={'decimalPoints': 3, 'currencySymbol': '€', },
                                   aggFunc="avg",)
 
     grid_builder.configure_column('Cost',
                                   type=numeric_types,
-                                  valueGetter=currency_getter,
-                                  valueFormatter=currency_formatter,
-                                  cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',},
+                                  valueFormatter="new Intl.NumberFormat('en-US', {style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value)",
+                                  # valueGetter=currency_getter,
+                                  # valueFormatter=currency_formatter,
+                                  # cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',},
                                   aggFunc="sum",)
 
     grid_builder.configure_column('ROI', type=numeric_types,
-                                  valueGetter=percentage_getter,
-                                  valueFormatter=percentage_formatter,
-                                  cellRendererParams={'decimalPoints': 1},
+                                  valueFormatter="(value * 100).toFixed(1) + '%'",
+                                  # valueGetter=percentage_getter,
+                                  # valueFormatter=percentage_formatter,
+                                  # cellRendererParams={'decimalPoints': 1},
                                   aggFunc="avg",
                                   )
 
     grid_builder.configure_column('Revenue',
                                   type=numeric_types,
-                                  valueGetter=currency_getter,
-                                  valueFormatter=currency_formatter,
-                                  cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',},
+                                  valueFormatter="new Intl.NumberFormat('en-US', {style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value)",
+                                  # valueGetter=currency_getter,
+                                  # valueFormatter=currency_formatter,
+                                  # cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',},
                                   aggFunc="sum",
                                   )
 
     grid_builder.configure_column('clickshare', header_name='Click Share', type=numeric_types,
-                                  valueGetter=percentage_getter,
-                                  valueFormatter=percentage_formatter,
-                                  cellRendererParams={'decimalPoints': 2},
+                                  valueFormatter="(value * 100).toFixed(2) + '%'",
+                                  # valueGetter=percentage_getter,
+                                  # valueFormatter=percentage_formatter,
+                                  # cellRendererParams={'decimalPoints': 2},
                                   aggFunc="avg",)
 
     text_types = ['textColumn', 'stringColumnFilter']
