@@ -1,12 +1,11 @@
 import streamlit as st
 from synthetic_data.synthetic_data_generator import datasets, markets
-from utils.read_data import read_and_combine_csv_files
+from utils.read_data import read_and_combine_csv_files, read_and_combine_csv_files_polars
 from utils.aggrid_config import aggrid_configuration
 from utils.filtering import filtering_pandas
 import time
 from datetime import datetime
-import hashlib
-import pandas as pd
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # ---------------------------------------------------------------------
 # HOME PAGE - CONFIGURATION
@@ -28,6 +27,7 @@ with st.sidebar:
         with st.spinner(text=f'Reading data with {num_rows} rows'):
             folder_path = f'synthetic_data/data_csv/dataset_{num_rows}'
             df = read_and_combine_csv_files(folder_path)
+            polars_df = read_and_combine_csv_files_polars(folder_path)
 
     with st.form('execution_form'):
         submitted = st.form_submit_button("Execute", type="primary")
@@ -83,6 +83,14 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader('Basic dataframe execution time')
     st.write('Rendering basic dataframe: {}'.format(execution_time))
+
+with st.container(border=True):
+    st.subheader('Rendering AgGrid with polars')
+    st.write('This is how the polars dataframe is loaded...')
+    st.write(polars_df.head())
+
+    st.write('And this is the error that AgGrid throws when dealing with pandas...')
+    standard_AgGrid = AgGrid(polars_df, gridOptions=GridOptionsBuilder.from_dataframe(polars_df).build())
 
 
 
