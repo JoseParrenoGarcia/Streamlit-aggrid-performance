@@ -1,7 +1,7 @@
 import streamlit as st
 from synthetic_data.synthetic_data_generator import datasets, markets
 from utils.read_data import read_and_combine_csv_files, read_and_combine_csv_files_polars
-from utils.aggrid_config import aggrid_configuration
+from utils.aggrid_config import aggrid_configuration, faster_aggrid_configuration
 from utils.filtering import filtering_pandas
 import time
 from datetime import datetime
@@ -61,12 +61,23 @@ with st.sidebar:
 with st.container(border=True):
     st.subheader('Rendering AgGrid')
     start_time = time.time()
-    aggrid_df, aggrid_polars_df = aggrid_configuration(df)
+    aggrid_df = aggrid_configuration(df)
     execution_time = time.time() - start_time
 
 with st.container(border=True):
     st.subheader('AgGrid execution time')
     st.write('Rendering AgGrid: {}'.format(execution_time))
+
+with st.container(border=True):
+    st.subheader('Rendering Faster AgGrid')
+    st.write('We are trying to understand how fast does AgGrid render tables when no formatting or special functionalities is required.')
+    start_time = time.time()
+    faster_aggrid_df = faster_aggrid_configuration(df)
+    execution_time = time.time() - start_time
+
+with st.container(border=True):
+    st.subheader('Faster AgGrid execution time')
+    st.write('Rendering Faster AgGrid: {}'.format(execution_time))
 
 with st.container(border=True):
     st.subheader('Rendering basic dataframe')

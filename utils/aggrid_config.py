@@ -28,74 +28,6 @@ function(params) {
 }
 """)
 
-# Define JsCode for percentage formatting
-percentage_formatter = JsCode("""
-function(params) {
-    if (params.value == null) {
-        return '';
-    }
-    var decimalPoints = params.column.colDef.cellRendererParams.decimalPoints || 2;
-    return (params.value * 100).toFixed(decimalPoints) + '%';
-}
-""")
-
-percentage_getter = JsCode("""
-function(params) {
-    return params.data[params.colDef.field];
-}
-""")
-
-# Define JsCode for currency formatting
-currency_formatter = JsCode("""
-function(params) {
-    if (params.value == null || params.value === undefined) {
-        return '';
-    }
-    var decimalPoints = params.column.colDef.cellRendererParams.decimalPoints || 0;
-    var currencySymbol = params.column.colDef.cellRendererParams.currencySymbol || '€';
-    var value = params.value;
-
-    // Format the number with thousand separators and decimal points
-    var formattedNumber = value.toLocaleString('en-US', {
-        minimumFractionDigits: decimalPoints,
-        maximumFractionDigits: decimalPoints
-    });
-
-    return currencySymbol + formattedNumber;
-}
-""")
-
-currency_getter = JsCode("""
-function(params) {
-    return params.data[params.colDef.field];
-}
-""")
-
-# Define JsCode for currency formatting
-thousands_formatter = JsCode("""
-function(params) {
-    if (params.value == null || params.value === undefined) {
-        return '';
-    }
-    var decimalPoints = params.column.colDef.cellRendererParams.decimalPoints || 0;
-    var value = params.value;
-
-    // Format the number with thousand separators and decimal points
-    var formattedNumber = value.toLocaleString('en-US', {
-        minimumFractionDigits: decimalPoints,
-        maximumFractionDigits: decimalPoints
-    });
-
-    return formattedNumber;
-}
-""")
-
-thousands_getter = JsCode("""
-function(params) {
-    return params.data[params.colDef.field];
-}
-""")
-
 def aggrid_configuration(df):
     grid_builder = GridOptionsBuilder.from_dataframe(df)
 
@@ -104,7 +36,7 @@ def aggrid_configuration(df):
 
     # Use pagination and row virtualisation for better performance
     grid_builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
-    grid_builder.configure_grid_options(enableRowVirtualization=True, enableRangeSelection=False)
+    # grid_builder.configure_grid_options(enableRowVirtualization=True, enableRangeSelection=False)
 
     # All columns
     grid_builder.configure_default_column(filter=True, groupable=True, value=True, enableRowGroup=True)
@@ -116,64 +48,40 @@ def aggrid_configuration(df):
     grid_builder.configure_column('Impressions',
                                   type=numeric_types,
                                   valueFormatter="new Intl.NumberFormat('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value)",
-                                  # valueGetter=thousands_getter,
-                                  # valueFormatter=thousands_formatter,
-                                  # cellRendererParams={'decimalPoints': 0},
                                   aggFunc="sum",)
 
     grid_builder.configure_column('CTR',
                                   type=numeric_types,
                                   valueFormatter="(value * 100).toFixed(2) + '%'",
-                                  # valueGetter=percentage_getter,
-                                  # valueFormatter=percentage_formatter,
-                                  # cellRendererParams={'decimalPoints': 2},
                                   aggFunc="avg",)
 
     grid_builder.configure_column('Clicks',
                                   type=numeric_types,
                                   valueFormatter="new Intl.NumberFormat('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value)",
-                                  # valueGetter=thousands_getter,
-                                  # valueFormatter=thousands_formatter,
-                                  # cellRendererParams={'decimalPoints': 0},
                                   aggFunc="sum",)
 
     grid_builder.configure_column('CPC', type=numeric_types,
                                   valueFormatter="new Intl.NumberFormat('en-US', {style: 'currency', currency: 'EUR'}).format(value)",
-                                  # valueGetter=currency_getter,
-                                  # valueFormatter=currency_formatter,
-                                  # cellRendererParams={'decimalPoints': 3, 'currencySymbol': '€', },
                                   aggFunc="avg",)
 
     grid_builder.configure_column('Cost',
                                   type=numeric_types,
                                   valueFormatter="new Intl.NumberFormat('en-US', {style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value)",
-                                  # valueGetter=currency_getter,
-                                  # valueFormatter=currency_formatter,
-                                  # cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',},
                                   aggFunc="sum",)
 
     grid_builder.configure_column('ROI', type=numeric_types,
                                   valueFormatter="(value * 100).toFixed(1) + '%'",
-                                  # valueGetter=percentage_getter,
-                                  # valueFormatter=percentage_formatter,
-                                  # cellRendererParams={'decimalPoints': 1},
                                   aggFunc="avg",
                                   )
 
     grid_builder.configure_column('Revenue',
                                   type=numeric_types,
                                   valueFormatter="new Intl.NumberFormat('en-US', {style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0}).format(value)",
-                                  # valueGetter=currency_getter,
-                                  # valueFormatter=currency_formatter,
-                                  # cellRendererParams={'decimalPoints': 0, 'currencySymbol': '€',},
                                   aggFunc="sum",
                                   )
 
     grid_builder.configure_column('clickshare', header_name='Click Share', type=numeric_types,
                                   valueFormatter="(value * 100).toFixed(2) + '%'",
-                                  # valueGetter=percentage_getter,
-                                  # valueFormatter=percentage_formatter,
-                                  # cellRendererParams={'decimalPoints': 2},
                                   aggFunc="avg",)
 
     text_types = ['textColumn', 'stringColumnFilter']
@@ -195,7 +103,25 @@ def aggrid_configuration(df):
                            theme='balham',
                            )
 
-    filtered_df = pl.DataFrame(grid_response['data'])
+    # https://streamlit-aggrid.readthedocs.io/en/docs/AgGrid.html
+    return grid_response
+
+def faster_aggrid_configuration(df):
+    grid_builder = GridOptionsBuilder.from_dataframe(df)
+
+    grid_builder.configure_pagination(paginationAutoPageSize=False, paginationPageSize=20)
+    grid_builder.configure_grid_options(rowBuffer=0, enableRangeSelection=False)
+
+    # Build grid options
+    gridOptions = grid_builder.build()
+
+    grid_response = AgGrid(df,
+                           gridOptions=gridOptions,
+                           allow_unsafe_jscode=True,
+                           height=500,  # 38px per row or 500px
+                           fit_columns_on_grid_load=False,
+                           theme='balham',
+                           )
 
     # https://streamlit-aggrid.readthedocs.io/en/docs/AgGrid.html
-    return grid_response, filtered_df
+    return grid_response
